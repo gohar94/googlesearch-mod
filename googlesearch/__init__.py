@@ -6,21 +6,23 @@ from urllib.parse import unquote # to decode the url
 from .user_agents import get_useragent
 
 
-def _req(term, results, lang, start, proxies, timeout, safe, ssl_verify, region):
-    resp = get(
-        url="https://www.google.com/search",
-        headers={
-            "User-Agent": get_useragent(),
-            "Accept": "*/*"
-        },
-        params={
+def _req(term, results, lang, start, proxies, timeout, safe, ssl_verify, region, custom_params):
+    params={
             "q": term,
             "num": results + 2,  # Prevents multiple requests
             "hl": lang,
             "start": start,
             "safe": safe,
             "gl": region,
+    }
+    params = params | custom_params
+    resp = get(
+        url="https://www.google.com/search",
+        headers={
+            "User-Agent": get_useragent(),
+            "Accept": "*/*"
         },
+        params=params,
         proxies=proxies,
         timeout=timeout,
         verify=ssl_verify,
@@ -43,7 +45,7 @@ class SearchResult:
         return f"SearchResult(url={self.url}, title={self.title}, description={self.description})"
 
 
-def search(term, num_results=10, lang="en", proxy=None, advanced=False, sleep_interval=0, timeout=5, safe="active", ssl_verify=None, region=None, start_num=0, unique=False):
+def search(term, num_results=10, lang="en", proxy=None, advanced=False, sleep_interval=0, timeout=5, safe="active", ssl_verify=None, region=None, start_num=0, unique=False, custom_params={}):
     """Search the Google search engine"""
 
     # Proxy setup
@@ -56,7 +58,7 @@ def search(term, num_results=10, lang="en", proxy=None, advanced=False, sleep_in
     while fetched_results < num_results:
         # Send request
         resp = _req(term, num_results - start,
-                    lang, start, proxies, timeout, safe, ssl_verify, region)
+                    lang, start, proxies, timeout, safe, ssl_verify, region, custom_params)
         
         # put in file - comment for debugging purpose
         # with open('google.html', 'w') as f:
